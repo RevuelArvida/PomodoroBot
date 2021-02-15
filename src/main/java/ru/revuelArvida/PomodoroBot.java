@@ -1,31 +1,29 @@
 package ru.revuelArvida;
 
 
-import org.springframework.context.ApplicationContext;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.revuelArvida.updateHandlers.CallBackQueryHandler;
-import ru.revuelArvida.updateHandlers.MessageHandler;
 import ru.revuelArvida.updateHandlers.UpdateHandler;
 
-
+@Component
 public class PomodoroBot extends TelegramLongPollingBot {
 
     private String botUsername;
     private String botToken;
+    @Autowired
     private UpdateHandler messageHandler;
+    @Autowired
     private UpdateHandler callBackQueryHandler;
 
 
     public PomodoroBot (String botUsername, String botToken){
         this.botUsername = botUsername;
         this.botToken = botToken;
-
-        this.messageHandler = PomodoroBotApp.getCtx().getBean(MessageHandler.class);
-        this.callBackQueryHandler = PomodoroBotApp.getCtx().getBean(CallBackQueryHandler.class);;
     }
 
 
@@ -49,15 +47,13 @@ public class PomodoroBot extends TelegramLongPollingBot {
     }
 
 
-    public void sendMessage(Message message, String text){
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText(text);
-
+    public void sendMessage(SendMessage sendMessage){
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
+
 }

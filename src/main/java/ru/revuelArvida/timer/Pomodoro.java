@@ -1,5 +1,7 @@
 package ru.revuelArvida.timer;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.revuelArvida.PomodoroBot;
@@ -9,10 +11,16 @@ import java.util.Timer;
 
 public class Pomodoro  {
 
+    @Setter
+    @Getter
     private int workPeriod;
+    @Setter
+    @Getter
     private int shortBrakePeriod;
+    @Setter
+    @Getter
     private int longBrakePeriod;
-    private PomodoroBot bot;
+    private final PomodoroBot bot;
     private Timer timer;
 
 
