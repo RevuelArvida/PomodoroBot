@@ -1,4 +1,4 @@
-package ru.revuelArvida;
+package ru.revuelArvida.task;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,7 @@ public class Task {
 
     private String task;
     private Boolean isDone;
+    private int pomodoroPeriods;
 
     public Task(String task){
         this.task = task;

@@ -3,6 +3,7 @@ package ru.revuelArvida.timer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.revuelArvida.PomodoroBot;
+import ru.revuelArvida.task.Task;
 
 import java.util.Timer;
 
@@ -25,8 +26,8 @@ public class Pomodoro  {
 
     public void startWork(SendMessage sendMessage) throws TelegramApiException {
         timer = new Timer();
-        PomodoroTask task = new PomodoroTask(bot, sendMessage);
-        timer.schedule(task, 0, workPeriod);
+        PomodoroTask pomodoroTask = new PomodoroTask(bot, sendMessage);
+        timer.schedule(pomodoroTask, 0, workPeriod);
     }
 
     public void startShortBreak(SendMessage sendMessage){

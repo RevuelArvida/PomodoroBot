@@ -8,10 +8,12 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 public class PomodoroBotApp {
 
+    public static ApplicationContext ctx;
+
 
     public static void main(String[] args) {
 
-        ApplicationContext ctx = new AnnotationConfigApplicationContext(ContextConfig.class);
+        ctx = new AnnotationConfigApplicationContext(ContextConfig.class);
 
         PomodoroBot bot = ctx.getBean(PomodoroBot.class);
 
@@ -22,6 +24,10 @@ public class PomodoroBotApp {
             exc.printStackTrace();
         }
 
+    }
+
+    public static ApplicationContext getCtx(){
+        return ctx;
     }
 
 }
