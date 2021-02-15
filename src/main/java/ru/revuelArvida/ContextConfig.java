@@ -17,8 +17,7 @@ public class ContextConfig {
     @Bean
     @Scope("singleton")
     public PomodoroBot pomodoroBot(){
-        PomodoroBot bot = new PomodoroBot(name, token);
-        return  bot;
+        return  new PomodoroBot(name, token);
     }
 
 
