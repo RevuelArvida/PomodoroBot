@@ -1,10 +1,10 @@
-package ru.revuelArvida;
+package ru.revuelArvida.timer;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.revuelArvida.PomodoroBot;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class Pomodoro  {
 
@@ -25,19 +25,19 @@ public class Pomodoro  {
 
     public void startWork(SendMessage sendMessage) throws TelegramApiException {
         timer = new Timer();
-        TaskCreator task = new TaskCreator(bot, sendMessage);
+        PomodoroTask task = new PomodoroTask(bot, sendMessage);
         timer.schedule(task, 0, workPeriod);
     }
 
     public void startShortBreak(SendMessage sendMessage){
         timer = new Timer();
-        TaskCreator task = new TaskCreator(bot, sendMessage);
+        PomodoroTask task = new PomodoroTask(bot, sendMessage);
         timer.schedule(task, 0, shortBrakePeriod);
     }
 
     public void startLongBreak(SendMessage sendMessage){
         timer = new Timer();
-        TaskCreator task = new TaskCreator(bot, sendMessage);
+        PomodoroTask task = new PomodoroTask(bot, sendMessage);
         timer.schedule(task, 0, longBrakePeriod);
     }
 
@@ -48,22 +48,3 @@ public class Pomodoro  {
 
 }
 
-    class TaskCreator extends TimerTask{
-
-        private PomodoroBot bot;
-        private SendMessage sendMessage;
-
-        TaskCreator(PomodoroBot bot, SendMessage sendMessage){
-            this.bot = bot;
-            this.sendMessage = sendMessage;
-        }
-
-        @Override
-        public void run() {
-            try {
-                bot.execute(sendMessage);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        }
-    }
