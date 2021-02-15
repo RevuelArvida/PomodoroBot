@@ -1,0 +1,5 @@
+.idea
+*.iml
+out
+target
+/src/main/resources/TelegramBot.properties
