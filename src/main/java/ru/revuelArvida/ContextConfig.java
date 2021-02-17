@@ -2,9 +2,7 @@ package ru.revuelArvida;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import ru.revuelArvida.updateHandlers.CallBackQueryHandler;
-import ru.revuelArvida.updateHandlers.MessageHandler;
+import ru.revuelArvida.task.TaskManager;
 
 
 @Configuration
@@ -24,5 +22,6 @@ public class ContextConfig {
         return bot;
     }
 
+    
 
 }

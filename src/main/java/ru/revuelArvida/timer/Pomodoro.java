@@ -2,6 +2,9 @@ package ru.revuelArvida.timer;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.revuelArvida.PomodoroBot;
@@ -9,6 +12,8 @@ import ru.revuelArvida.task.Task;
 
 import java.util.Timer;
 
+@Component
+@Scope("prototype")
 public class Pomodoro  {
 
     @Setter
@@ -20,10 +25,14 @@ public class Pomodoro  {
     @Setter
     @Getter
     private int longBrakePeriod;
+
     private final PomodoroBot bot;
     private Timer timer;
 
-
+    @Autowired
+    public Pomodoro(PomodoroBot bot){
+        this.bot = bot;
+    }
 
     public Pomodoro(int workPeriod, int shortBrakePeriod, int longBrakePeriod, PomodoroBot bot){
         this.workPeriod = workPeriod;

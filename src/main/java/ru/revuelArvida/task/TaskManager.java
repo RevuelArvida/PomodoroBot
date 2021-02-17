@@ -2,15 +2,13 @@ package ru.revuelArvida.task;
 
 
 import lombok.NoArgsConstructor;
-import ru.revuelArvida.task.Task;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 @NoArgsConstructor
 public class TaskManager {
 
+    Map<String, List<Task>> taskMap = new HashMap<>();
     private List<Task> taskList = new ArrayList<>();
     private int listSize;
 

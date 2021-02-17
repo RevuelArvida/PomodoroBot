@@ -2,5 +2,7 @@ package ru.revuelArvida;
 
 public enum States {
     SETTINGS,
-    WORK
+    PERSONALIZED_SETTINGS,
+    WORK,
+    WAIT
 }
