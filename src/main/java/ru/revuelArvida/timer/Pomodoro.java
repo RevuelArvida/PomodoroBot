@@ -42,10 +42,10 @@ public class Pomodoro {
 
 
 
-    public void startWork() throws PropertyException {
+    public void startWork() throws IllegalArgumentException{
 
         if (pomodoroSettings == null || sendMessage == null){
-            throw new PropertyException("Pomodoro properties or SendMessage not set");
+            throw new IllegalArgumentException("Pomodoro properties or SendMessage not set");
         }
 
         state = PomodoroState.WORK;
@@ -54,10 +54,10 @@ public class Pomodoro {
     }
 
 
-    public void startBreak() throws PropertyException {
+    public void startBreak() throws IllegalArgumentException {
 
         if (pomodoroSettings == null || sendMessage == null){
-            throw new PropertyException("Pomodoro properties or SendMessage not set");
+            throw new IllegalArgumentException("Pomodoro properties or SendMessage not set");
         }
 
         if(pomodoroSettings.getCount() == 4){
