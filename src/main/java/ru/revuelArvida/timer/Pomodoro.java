@@ -1,68 +1,72 @@
 package ru.revuelArvida.timer;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.revuelArvida.PomodoroBot;
-import ru.revuelArvida.task.Task;
 
+import javax.xml.bind.PropertyException;
 import java.util.Timer;
+import java.util.TimerTask;
 
 @Component
-@Scope("prototype")
-public class Pomodoro  {
+@Scope("singleton")
+public class Pomodoro {
 
-    @Setter
-    @Getter
-    private int workPeriod;
-    @Setter
-    @Getter
-    private int shortBrakePeriod;
-    @Setter
-    @Getter
-    private int longBrakePeriod;
+    private PomodoroSettings pomodoroSettings;
+    private SendMessage sendMessage;
+    private TimerTask task;
+
+    public void setPomodoroSettings(PomodoroSettings pomodoroSettings) {
+        this.pomodoroSettings = pomodoroSettings;
+    }
+
+    public void setSendMessage(SendMessage sendMessage) {
+        this.sendMessage = sendMessage;
+    }
 
     private final PomodoroBot bot;
     private Timer timer;
 
-    @Autowired
+
     public Pomodoro(PomodoroBot bot){
         this.bot = bot;
     }
 
-    public Pomodoro(int workPeriod, int shortBrakePeriod, int longBrakePeriod, PomodoroBot bot){
-        this.workPeriod = workPeriod;
-        this.shortBrakePeriod = shortBrakePeriod;
-        this.longBrakePeriod = longBrakePeriod;
-        this.bot = bot;
+    public void startWork() throws PropertyException {
+        if (pomodoroSettings == null || sendMessage == null){
+            throw new PropertyException("Pomodoro properties or SendMessage not set");
+        }
+
+
     }
 
-    public void startWork(SendMessage sendMessage) throws TelegramApiException {
+    private void startWork(SendMessage sendMessage, PomodoroSettings settings) {
+        if (settings.getCount() < 4){
+        sendMessage.setText("Пора сделать перерыв! Отдохни " + settings.getCount() + " минут!");
+        } if (settings.getCount() == 4){
+            sendMessage.setText("Пора передохнуть! У тебя " + settings.getLongBrakePeriod() + " " +
+                    "минут!");
+        }
+
         timer = new Timer();
         PomodoroTask pomodoroTask = new PomodoroTask(bot, sendMessage);
-        timer.schedule(pomodoroTask, 0, workPeriod);
+        timer.schedule(pomodoroTask, settings.getWorkPeriod());
     }
 
-    public void startShortBreak(SendMessage sendMessage){
+    private void startShortBreak(SendMessage sendMessage,PomodoroSettings settings){
         timer = new Timer();
-        PomodoroTask task = new PomodoroTask(bot, sendMessage);
-        timer.schedule(task, 0, shortBrakePeriod);
+        timer.schedule(new PomodoroTask(bot, sendMessage),  settings.getShortBrakePeriod());
     }
 
-    public void startLongBreak(SendMessage sendMessage){
+    private void startLongBreak(SendMessage sendMessage, PomodoroSettings settings){
         timer = new Timer();
         PomodoroTask task = new PomodoroTask(bot, sendMessage);
-        timer.schedule(task, 0, longBrakePeriod);
+        timer.schedule(task, settings.getLongBrakePeriod());
     }
 
     public void cancelTimer(){
         timer.cancel();
     }
 
-
 }
-
