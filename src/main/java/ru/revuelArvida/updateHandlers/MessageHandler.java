@@ -50,13 +50,15 @@ public class MessageHandler implements UpdateHandler {
         setUser(update);
 
         if (bot.getState() == States.WAIT)                  {handleWait(update.getMessage());}
-        if (bot.getState() == States.SETTINGS)              {handleSettings(update.getMessage());}
-        if (bot.getState() == States.PERSONALIZED_SETTINGS) {handlePersonalizedSettings(update.getMessage());}
-        if (bot.getState() == States.TASK_LIST)             {handleTaskList(update.getMessage());}
-        if (bot.getState() == States.WORK)                  {handleWork(update.getMessage());}
-        if (bot.getState() == States.ADD_TASK ||
+        else if (bot.getState() == States.SETTINGS)              {handleSettings(update.getMessage());}
+        else if (bot.getState() == States.PERSONALIZED_SETTINGS) {handlePersonalizedSettings(update.getMessage());}
+        else if (bot.getState() == States.TASK_LIST)             {handleTaskList(update.getMessage());}
+        else if (bot.getState() == States.WORK)                  {handleWork(update.getMessage());}
+
+        else if (bot.getState() == States.ADD_TASK ||
                 bot.getState() == States.ADD_TASK_AT_BEGIN ||
                 bot.getState() == States.CHANGE_TASK ||
+                bot.getState() == States.ADD_TASK_INDEX ||
                 bot.getState() == States.ADD_TASK_AT_INDEX ||
                 bot.getState() == States.DELETE_TASK ||
                 bot.getState() == States.CHANGE_TASK_INDEX) {handleTaskListChanges(update.getMessage());}
@@ -134,18 +136,19 @@ public class MessageHandler implements UpdateHandler {
                         + "\nКороткий перерыв - " + pomodoroSettings.getShortBrakePeriod(false) + " " +
                         "мин. " +
                         "\nДлинный перерыв - " + pomodoroSettings.getLongBrakePeriod(false) + " мин.");
+
+                bot.setState(States.SETTINGS);
                 bot.sendMessage(sendMessage);
             }
 
             case "Задачи" -> {
+                bot.setState(States.TASK_LIST);
+                if (taskManager.getTaskList(message).size() == 0){
 
-                if (taskManager.getTaskList(message) == null){
-
-                    sendMessage.setText("На текущий момент у вас нет задач, чтобы добавить первую" +
+                    sendMessage.setText("На текущий момент у вас нет задач, чтобы добавить" +
                             " задачу, нажмите \"Добавить задачу\". \nЧтобы вернуться в главное " +
-                            "меню," +
-                            " нажмите \"Выход\"");
-                    bot.setState(States.TASK_LIST);
+                            "меню," + " нажмите \"Выход\"");
+
 
                 } else {
 
@@ -184,6 +187,13 @@ public class MessageHandler implements UpdateHandler {
                 sendMessage.setText("Отлично, введите пожалуйста продолжительность рабочего " +
                         "периода:");
 
+                bot.sendMessage(sendMessage);
+            }
+
+            case "Выход" -> {
+                sendMessage.setText("Возврат в главное меню");
+
+                bot.setState(States.WAIT);
                 bot.sendMessage(sendMessage);
             }
 
@@ -251,7 +261,7 @@ public class MessageHandler implements UpdateHandler {
             }
 
             case "Добавить задачу по номеру" -> {
-                bot.setState(States.ADD_TASK_AT_INDEX);
+                bot.setState(States.ADD_TASK_INDEX);
                 sendMessage.setText("Введите индекс на котором должна быть задача: ");
                 bot.sendMessage(sendMessage);
             }
@@ -265,6 +275,12 @@ public class MessageHandler implements UpdateHandler {
             case "Удалить задачу" ->{
                 bot.setState(States.DELETE_TASK);
                 sendMessage.setText("Введите индек задачи, которую хотите удалить: ");
+                bot.sendMessage(sendMessage);
+            }
+
+            case "Выход" ->{
+                bot.setState(States.WAIT);
+                sendMessage.setText("Возврат в главное меню");
                 bot.sendMessage(sendMessage);
             }
 
@@ -293,12 +309,16 @@ public class MessageHandler implements UpdateHandler {
 
         } else if (bot.getState() == States.ADD_TASK_INDEX) {
 
-            indexMap.put(message.getChatId().toString(), Integer.parseInt(message.getText()));
-            sendMessage.setText("Введите вашу задачу: ");
+            if(Integer.parseInt(message.getText()) > taskManager.getTaskList(message).size() || Integer.parseInt(message.getText()) <= 0){
+                sendMessage.setText("Ваш индекс не входит в размер списка, текущий размер - " + taskManager.getTaskList(message).size() + " \n Пожалуйста возьмите индекс из диапазона от 1 до этой величины!");
+            } else {
 
-            bot.setState(States.ADD_TASK_AT_INDEX);
+                indexMap.put(message.getChatId().toString(), Integer.parseInt(message.getText()));
+                sendMessage.setText("Введите вашу задачу: ");
+
+                bot.setState(States.ADD_TASK_AT_INDEX);
+            }
             bot.sendMessage(sendMessage);
-
         } else if (bot.getState() == States.ADD_TASK_AT_INDEX){
 
             taskManager.createTaskAtIndex(message, indexMap.get(message.getChatId().toString()));
@@ -308,29 +328,33 @@ public class MessageHandler implements UpdateHandler {
             bot.sendMessage(sendMessage);
 
         } else if (bot.getState() == States.CHANGE_TASK_INDEX){
+            if(Integer.parseInt(message.getText()) > taskManager.getTaskList(message).size() || Integer.parseInt(message.getText()) <= 0){
+                sendMessage.setText("Ваш индекс не входит в размер списка, текущий размер - " + taskManager.getTaskList(message).size() + " \n Пожалуйста возьмите индекс из диапазона от 1 до этой величины!");
+            } else {
+                indexMap.put(message.getChatId().toString(), Integer.parseInt(message.getText()));
+                sendMessage.setText("Введите вашу новую задачу: ");
 
-            indexMap.put(message.getChatId().toString(), Integer.parseInt(message.getText()));
-            sendMessage.setText("Введите вашу задачу: ");
-
-            bot.setState(States.CHANGE_TASK);
+                bot.setState(States.CHANGE_TASK);
+            }
             bot.sendMessage(sendMessage);
-
         } else if (bot.getState() == States.CHANGE_TASK){
 
-            taskManager.changeTask(message,  indexMap.get(message.getChatId()));
+            taskManager.changeTask(message,  indexMap.get(message.getChatId().toString()));
             sendMessage.setText("Задача изменена!");
 
             bot.setState(States.TASK_LIST);
             bot.sendMessage(sendMessage);
 
         } else if (bot.getState() == States.DELETE_TASK){
+            if(Integer.parseInt(message.getText()) > taskManager.getTaskList(message).size() || Integer.parseInt(message.getText()) <= 0) {
+                sendMessage.setText("Ваш индекс не входит в размер списка, текущий размер - " + taskManager.getTaskList(message).size() + " \n Пожалуйста возьмите индекс из диапазона от 1 до этой величины!");
+            } else {
+                taskManager.deleteTask(message);
+                sendMessage.setText("Задача удалена!");
 
-            taskManager.deleteTask(message);
-            sendMessage.setText("Задача удалена!");
-
-            bot.setState(States.TASK_LIST);
+                bot.setState(States.TASK_LIST);
+            }
             bot.sendMessage(sendMessage);
-
         }
 
     }

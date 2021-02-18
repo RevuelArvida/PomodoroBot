@@ -14,7 +14,6 @@ import java.util.*;
 public class TaskManager {
 
     Map<String, List<Task>> taskMap = new HashMap<>();
-    private int listSize;
 
     public List<Task> getTaskList(Message message){
         List<Task> taskList = taskMap.get(message.getChatId().toString());
@@ -29,19 +28,16 @@ public class TaskManager {
     public void createTaskAtBegin(Message message){
         List<Task> taskList = getTaskList(message);
         taskList.add(0, new Task(message.getText()));
-        listSize = taskList.size();
     }
 
     public void createTaskAtEnd(Message message){
         List<Task> taskList = getTaskList(message);
         taskList.add(new Task(message.getText()));
-        listSize = taskList.size();
     }
 
     public void createTaskAtIndex(Message message, int index){
         List<Task> taskList = getTaskList(message);
-        taskList.add(index, new Task(message.getText()));
-        listSize = taskList.size();
+        taskList.add(index - 1, new Task(message.getText()));
     }
 
     public void deleteTask(Message message) throws IndexOutOfBoundsException, NumberFormatException{
@@ -50,13 +46,7 @@ public class TaskManager {
         try {
             int index = Integer.parseInt(message.getText());
 
-            if(index < listSize){
-                throw new IndexOutOfBoundsException("Нет такой задачи");
-            }
-
             taskList.remove(index - 1);
-            listSize = taskList.size();
-
         } catch (NumberFormatException exc){
             throw new NumberFormatException("Input argument isn't INTEGER");
         }
@@ -64,9 +54,6 @@ public class TaskManager {
     }
 
     public void changeTask(Message message, int index){
-        if(index < listSize){
-            throw new IndexOutOfBoundsException("Нет такой задачи");
-        }
         List<Task> taskList = getTaskList(message);
 
         taskList.remove(index - 1);
