@@ -13,6 +13,7 @@ import ru.revuelArvida.PomodoroBotApp;
 import ru.revuelArvida.States;
 import ru.revuelArvida.timer.Pomodoro;
 import ru.revuelArvida.timer.PomodoroSettings;
+import ru.revuelArvida.timer.PomodoroState;
 
 import javax.xml.bind.PropertyException;
 import java.util.HashMap;
@@ -24,10 +25,9 @@ import java.util.Map;
 public class MessageHandler implements UpdateHandler {
 
     private final PomodoroBot bot;
-    private Map<String, PomodoroSettings> pomodoroMap = new HashMap<>();
-    private PomodoroSettings pomodoroSettings;
-    private SendMessage sendMessage;
-    private Pomodoro pomodoro;
+    private Map<String, PomodoroSettings> settingsMap = new HashMap<>();
+    private Map<String, SendMessage> sendMessageMap = new HashMap<>();
+    private Map<String, Pomodoro> pomodoroMap = new HashMap<>();
 
     private static final int DEFAULT_WORK_PERIOD = 25;
     private static final int DEFAULT_SHORT_BREAK_PERIOD = 5;
@@ -36,20 +36,12 @@ public class MessageHandler implements UpdateHandler {
     @Autowired
     public MessageHandler(PomodoroBot bot){
         this.bot = bot;
-        pomodoro = PomodoroBotApp.getCtx().getBean(Pomodoro.class);
     }
 
     @Override
     public void handle(Update update) {
 
-        sendMessage = new SendMessage();
-        sendMessage.setChatId(update.getMessage().getChatId().toString());
-        pomodoroSettings = pomodoroMap.get(update.getMessage().getChatId().toString());
-
-        if (pomodoroSettings == null){
-            pomodoroSettings = PomodoroBotApp.getCtx().getBean(PomodoroSettings.class);
-            pomodoroMap.put(update.getMessage().getChatId().toString(), pomodoroSettings);
-        }
+        setUser(update);
 
         if (bot.getState() == States.WAIT)                  {handleWait(update.getMessage());}
         if (bot.getState() == States.SETTINGS)              {handleSettings(update.getMessage());}
@@ -59,8 +51,37 @@ public class MessageHandler implements UpdateHandler {
 
     }
 
+    private void setUser(Update update){
+
+        SendMessage sendMessage = sendMessageMap.get(update.getMessage().getChatId().toString());
+
+        if (sendMessage == null) {
+            sendMessage = new SendMessage();
+            sendMessage.setChatId(update.getMessage().getChatId().toString());
+            sendMessageMap.put(update.getMessage().getChatId().toString(), sendMessage);
+        }
+
+        Pomodoro pomodoro = pomodoroMap.get(update.getMessage().getChatId().toString());
+
+        if (pomodoro == null) {
+            pomodoro = PomodoroBotApp.getCtx().getBean(Pomodoro.class);
+            pomodoroMap.put(update.getMessage().getChatId().toString(), pomodoro);
+        }
+
+        PomodoroSettings pomodoroSettings =
+                settingsMap.get(update.getMessage().getChatId().toString());
+
+        if (pomodoroSettings == null){
+            pomodoroSettings = PomodoroBotApp.getCtx().getBean(PomodoroSettings.class);
+            settingsMap.put(update.getMessage().getChatId().toString(), pomodoroSettings);
+        }
+    }
+
     public void handleWait(Message message){
         String text = message.getText();
+        SendMessage sendMessage = sendMessageMap.get(message.getChatId().toString());
+        Pomodoro pomodoro = pomodoroMap.get(message.getChatId().toString());
+        PomodoroSettings pomodoroSettings = settingsMap.get(message.getChatId().toString());
 
         switch (text) {
             case "/start" -> {
@@ -96,11 +117,11 @@ public class MessageHandler implements UpdateHandler {
             }
 
             case "Настройки" -> {
-                PomodoroSettings pomodoroSettings = pomodoroMap.get(message.getChatId().toString());
                 sendMessage.setText("Текущие настройки:" + "\nРабочий период - " +
-                        pomodoroSettings.getWorkPeriod() + " " + "мин."
-                        + "\nКороткий перерыв - " + pomodoroSettings.getShortBrakePeriod() + " мин. " +
-                        "\nДлинный перерыв - " + pomodoroSettings.getLongBrakePeriod() + " мин.");
+                        pomodoroSettings.getWorkPeriod(false) + " " + "мин."
+                        + "\nКороткий перерыв - " + pomodoroSettings.getShortBrakePeriod(false) + " " +
+                        "мин. " +
+                        "\nДлинный перерыв - " + pomodoroSettings.getLongBrakePeriod(false) + " мин.");
                 bot.sendMessage(sendMessage);
             }
         }
@@ -108,14 +129,8 @@ public class MessageHandler implements UpdateHandler {
 
     private void handleSettings(Message message){
         String text = message.getText();
-
-        PomodoroSettings pomodoroSettings = pomodoroMap.get(message.getChatId().toString());
-
-        if(pomodoroSettings == null){
-            pomodoroSettings = PomodoroBotApp.getCtx().getBean(PomodoroSettings.class);
-            pomodoroMap.put(message.getChatId().toString(),pomodoroSettings);
-        }
-
+        SendMessage sendMessage = sendMessageMap.get(message.getChatId().toString());
+        PomodoroSettings pomodoroSettings = settingsMap.get(message.getChatId().toString());
 
         switch (text){
             case "Установить настройки по умолчанию" ->{
@@ -150,26 +165,26 @@ public class MessageHandler implements UpdateHandler {
     }
 
     private void handlePersonalizedSettings(Message message){
-        String chatId = message.getChatId().toString();
         String text = message.getText();
+        SendMessage sendMessage = sendMessageMap.get(message.getChatId().toString());
+        PomodoroSettings pomodoroSettings = settingsMap.get(message.getChatId().toString());
 
-        PomodoroSettings pomodoroSettings = pomodoroMap.get(chatId);
 
-        if( pomodoroSettings.getWorkPeriod() == 0){
+        if( pomodoroSettings.getWorkPeriod(true) == 0){
             pomodoroSettings.setWorkPeriod(Integer.parseInt(text)) ;
             text = null;
 
             sendMessage.setText("Введите длительность короткого перерыва: ");
             bot.sendMessage(sendMessage);
 
-        } else if(pomodoroSettings.getShortBrakePeriod() == 0){
+        } else if(pomodoroSettings.getShortBrakePeriod(true) == 0 & text != null){
             pomodoroSettings.setShortBrakePeriod(Integer.parseInt(text));
             text = null;
 
             sendMessage.setText("Введите длительность длинного перерыва: ");
             bot.sendMessage(sendMessage);
 
-        } else if (pomodoroSettings.getLongBrakePeriod() == 0){
+        } else if (pomodoroSettings.getLongBrakePeriod(true) == 0 & text != null){
             pomodoroSettings.setLongBrakePeriod(Integer.parseInt(text));
             text = null;
 
@@ -184,6 +199,45 @@ public class MessageHandler implements UpdateHandler {
     }
 
     private void handleWork(Message message){
+        String text = message.getText();
+        Pomodoro pomodoro = pomodoroMap.get(message.getChatId().toString());
+
+        switch (text){
+            case "Начать перерыв" -> {
+
+                try {
+                    pomodoro.startBreak();
+                } catch (PropertyException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            case "Продолжить работу" -> {
+                try {
+                    pomodoro.startWork();
+                } catch (PropertyException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            case "Пауза" -> {
+                if (pomodoro.getState() == PomodoroState.WORK){
+                    pomodoro.cancelTimer();
+                }
+            }
+
+            case "Продолжить" -> {
+                if (pomodoro.getState() == PomodoroState.WORK) {
+                    pomodoro.resume();
+                }
+            }
+
+            case "Остановить работу" -> {
+                pomodoro.cancelTimer();
+                bot.setState(States.WAIT);
+            }
+        }
+
 
     }
 

@@ -6,7 +6,7 @@ import ru.revuelArvida.PomodoroBot;
 import java.util.TimerTask;
 
 
-class PomodoroTask extends TimerTask {
+public class PomodoroTask extends TimerTask {
 
     private PomodoroBot bot;
     private SendMessage sendMessage;
@@ -20,6 +20,5 @@ class PomodoroTask extends TimerTask {
     @Override
     public void run() {
             bot.sendMessage(sendMessage);
-
     }
 }
